@@ -311,7 +311,11 @@ class App {
 
     if (!data) return;
     this.#workouts = data; //set the data as workouts
-    this.#workouts.forEach(work => this._renderWorkout(work));
+    this.#workouts.forEach(work => {
+      this._renderWorkout(work);
+      work.__proto__ =
+        work.type === 'running' ? Running.prototype : Cycling.prototype;
+    });
   }
 
   // removing all data from local storage
