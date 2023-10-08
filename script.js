@@ -63,6 +63,7 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+const deleteAllBtn = document.querySelector('.btn-deleteAll');
 
 /////////////////////////////////////////
 // APPLICATION ARCHITECTURE
@@ -76,6 +77,12 @@ class App {
     // getting map position
     this._getPosition();
 
+    // get data from local storage
+    this._getLocalStorage();
+
+    // display delete btn
+    this._addDeleteBtn();
+
     // listening for form submission
     form.addEventListener('submit', this._newWorkout.bind(this));
 
@@ -84,6 +91,12 @@ class App {
 
     // move to the coordinates of workout when form is clicked
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
+
+    // delete all workouts
+    deleteAllBtn.addEventListener('click', this._deleteAll.bind(this));
+
+    // // delete workout
+    containerWorkouts.addEventListener('click', this._deleteWorkout.bind(this));
   }
 
   _getPosition() {
@@ -111,6 +124,10 @@ class App {
 
     //   event listener to show form when you click on map
     this.#map.on('click', this._showForm.bind(this));
+
+    this.#workouts.forEach(work => {
+      this._renderWorkoutMarker(work);
+    });
   }
 
   _showForm(mapE) {
@@ -197,6 +214,9 @@ class App {
 
     // hide form and clear input fields
     this._hideForm();
+
+    // set local storage to all workouts
+    this._setLocalStorage();
   }
 
   _renderWorkoutMarker(workout) {
@@ -248,6 +268,7 @@ class App {
           <span class="workout__value">${workout.cadence}</span>
           <span class="workout__unit">spm</span>
         </div>
+        <button class='btn-delete' data-id='${workout.id}'>🗑️</button>
       </li>`;
     }
 
@@ -263,6 +284,7 @@ class App {
             <span class="workout__value">${workout.elevation}</span>
             <span class="workout__unit">m</span>
         </div>
+        <button class='btn-delete' data-id='${workout.id}'>🗑️</button>
       </li>
       `;
     }
@@ -270,9 +292,39 @@ class App {
     form.insertAdjacentHTML('afterend', html);
   }
 
+  // add delete btn
+  _addDeleteBtn() {
+    if (this.#workouts.length > 0) {
+      deleteAllBtn.classList.remove('hidden');
+    }
+  }
+
+  // delete all workouts
+  _deleteAll() {
+    this.#workouts = [];
+    localStorage.clear();
+
+    const allWorkouts = document.querySelectorAll('.workout');
+    allWorkouts.forEach(work => work.remove());
+    this.#map.eachLayer(l => l instanceof L.Marker && l.remove());
+  }
+
+  _deleteWorkout(e) {
+    const button = e.target.closest('.btn-delete');
+    const workoutEl = e.target.closest('.workout');
+    if (!button) return;
+    const workout = this.#workouts.find(work => work.id === button.dataset.id);
+    const desiredWork = this.#workouts.findIndex(work => work.id === workout);
+
+    // remove the workout
+    workoutEl.style.display = 'none';
+    this.#workouts.splice(desiredWork, 1);
+    this._setLocalStorage();
+    location.reload();
+  }
+
   _moveToPopup(e) {
     const workoutEl = e.target.closest('.workout');
-    console.log(workoutEl);
 
     if (!workoutEl) return;
 
@@ -280,7 +332,6 @@ class App {
     const workout = this.#workouts.find(
       work => work.id === workoutEl.dataset.id
     );
-    console.log(workout);
 
     // moving the map to coords of workout
     this.#map.setView(workout.coords, this.#mapZoomLevel, {
@@ -289,7 +340,28 @@ class App {
         duration: 1,
       },
     });
-    workout.click();
+  }
+
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+
+    if (!data) return;
+    this.#workouts = data;
+    this.#workouts.forEach(work => {
+      this._renderWorkout(work);
+      work.type === 'running'
+        ? Object.setPrototypeOf(work, Running.prototype)
+        : Object.setPrototypeOf(work, Cycling.prototype);
+    });
+  }
+
+  reset() {
+    localStorage.removeItem('workouts');
+    location.reload();
   }
 }
 
