@@ -83,15 +83,6 @@ class App {
     // display delete btn
     this._addDeleteBtn();
 
-    // get data from local storage
-    this._getLocalStorage();
-
-    // display delete btn
-    this._addDeleteBtn();
-
-    // get data from local storage
-    this._getLocalStorage();
-
     // EVENT HANDLERS
     // listening for form submission
     form.addEventListener('submit', this._newWorkout.bind(this));
@@ -134,10 +125,6 @@ class App {
 
     //   event listener to show form when you click on map
     this.#map.on('click', this._showForm.bind(this));
-
-    this.#workouts.forEach(work => {
-      this._renderWorkoutMarker(work);
-    });
 
     // render markers of stored workouts
     this.#workouts.forEach(work => this._renderWorkoutMarker(work));
@@ -303,37 +290,6 @@ class App {
     }
     // inserting workout form in list
     form.insertAdjacentHTML('afterend', html);
-  }
-
-  // add delete btn
-  _addDeleteBtn() {
-    if (this.#workouts.length > 0) {
-      deleteAllBtn.classList.remove('hidden');
-    }
-  }
-
-  // delete all workouts
-  _deleteAll() {
-    this.#workouts = [];
-    localStorage.clear();
-
-    const allWorkouts = document.querySelectorAll('.workout');
-    allWorkouts.forEach(work => work.remove());
-    this.#map.eachLayer(l => l instanceof L.Marker && l.remove());
-  }
-
-  _deleteWorkout(e) {
-    const button = e.target.closest('.btn-delete');
-    const workoutEl = e.target.closest('.workout');
-    if (!button) return;
-    const workout = this.#workouts.find(work => work.id === button.dataset.id);
-    const desiredWork = this.#workouts.findIndex(work => work.id === workout);
-
-    // remove the workout
-    workoutEl.style.display = 'none';
-    this.#workouts.splice(desiredWork, 1);
-    this._setLocalStorage();
-    location.reload();
   }
 
   // add delete btn
