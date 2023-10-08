@@ -83,6 +83,16 @@ class App {
     // display delete btn
     this._addDeleteBtn();
 
+    // get data from local storage
+    this._getLocalStorage();
+
+    // display delete btn
+    this._addDeleteBtn();
+
+    // get data from local storage
+    this._getLocalStorage();
+
+    // EVENT HANDLERS
     // listening for form submission
     form.addEventListener('submit', this._newWorkout.bind(this));
 
@@ -111,7 +121,7 @@ class App {
 
   _loadMap(position) {
     const { latitude, longitude } = position.coords;
-    console.log(`https://www.google.com/maps/@${latitude},${longitude}`);
+    // console.log(`https://www.google.com/maps/@${latitude},${longitude}`);
 
     //   map from leaflet
     const coords = [latitude, longitude];
@@ -128,6 +138,9 @@ class App {
     this.#workouts.forEach(work => {
       this._renderWorkoutMarker(work);
     });
+
+    // render markers of stored workouts
+    this.#workouts.forEach(work => this._renderWorkoutMarker(work));
   }
 
   _showForm(mapE) {
@@ -323,6 +336,38 @@ class App {
     location.reload();
   }
 
+  // add delete btn
+  _addDeleteBtn() {
+    if (this.#workouts.length > 0) {
+      deleteAllBtn.classList.remove('hidden');
+    }
+  }
+
+  // delete all workouts
+  _deleteAll() {
+    this.#workouts = [];
+    localStorage.clear();
+
+    const allWorkouts = document.querySelectorAll('.workout');
+    allWorkouts.forEach(work => work.remove());
+    this.#map.eachLayer(l => l instanceof L.Marker && l.remove());
+  }
+
+  _deleteWorkout(e) {
+    const button = e.target.closest('.btn-delete');
+    const workoutEl = e.target.closest('.workout');
+    if (!button) return;
+    const workout = this.#workouts.find(work => work.id === button.dataset.id);
+    const desiredWork = this.#workouts.findIndex(work => work.id === workout);
+
+    // remove the workout
+    workoutEl.style.display = 'none';
+    this.#workouts.splice(desiredWork, 1);
+    this._setLocalStorage();
+    location.reload();
+  }
+
+  // move screen to popup marker
   _moveToPopup(e) {
     const workoutEl = e.target.closest('.workout');
 
