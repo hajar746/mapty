@@ -318,7 +318,7 @@ class App {
 
     // remove the workout
     workoutEl.style.display = 'none';
-    this.#workouts.splice(desiredWork, 1);
+    this.#workouts = this.#workouts.splice(desiredWork, 1);
     this._setLocalStorage();
     location.reload();
   }
